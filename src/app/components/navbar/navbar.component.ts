@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -28,13 +28,17 @@ import { CommonModule } from '@angular/common';
         <a routerLink="/mouvements" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <span>⇄</span> Mouvements
         </a>
-        <a routerLink="/utilisateurs" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <a *ngIf="isAdmin" routerLink="/utilisateurs" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <span>U</span> Utilisateurs
         </a>
       </div>
-      <div class="nav-status">
-        <span class="status-dot"></span>
-        <span>API Connected</span>
+      <div class="nav-right">
+        <span class="nav-user" *ngIf="userName">{{ userName }} ({{ userRole }})</span>
+        <button class="btn-logout" (click)="logout()">Deconnexion</button>
+        <div class="nav-status">
+          <span class="status-dot"></span>
+          <span>API Connected</span>
+        </div>
       </div>
     </nav>
   `,
@@ -83,13 +87,35 @@ import { CommonModule } from '@angular/common';
     }
     .nav-links a:hover { color: #f0f0ff; background: #1a1a24; }
     .nav-links a.active { color: #6c63ff; background: rgba(108,99,255,0.1); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .nav-user {
+      font-size: 0.75rem;
+      color: #8888aa;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      color: #ff6584;
+      font-size: 0.75rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,101,132,0.1); }
     .nav-status {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 0.75rem;
       color: #43e97b;
-      flex-shrink: 0;
     }
     .status-dot {
       width: 8px;
@@ -104,4 +130,23 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class NavbarComponent {}
+export class NavbarComponent implements OnInit {
+  isAdmin = false;
+  userName = '';
+  userRole = '';
+
+  ngOnInit() {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const parsed = JSON.parse(user);
+      this.userName = parsed.nom;
+      this.userRole = parsed.role;
+      this.isAdmin = parsed.role === 'ADMIN';
+    }
+  }
+
+  logout() {
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+}

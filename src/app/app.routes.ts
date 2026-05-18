@@ -6,14 +6,15 @@ import { StocksComponent } from './components/stocks/stocks.component';
 import { MouvementsComponent } from './components/mouvements/mouvements.component';
 import { UtilisateursComponent } from './components/utilisateurs/utilisateurs.component';
 import { LoginComponent } from './components/login/login.component';
+import { authGuard, adminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-  { path: 'dashboard', component: DashboardComponent, runGuardsAndResolvers: 'always' },
-  { path: 'entrepots', component: EntrepotsComponent, runGuardsAndResolvers: 'always' },
-  { path: 'produits', component: ProduitsComponent, runGuardsAndResolvers: 'always' },
-  { path: 'stocks', component: StocksComponent, runGuardsAndResolvers: 'always' },
-  { path: 'mouvements', component: MouvementsComponent, runGuardsAndResolvers: 'always' },
-  { path: 'utilisateurs', component: UtilisateursComponent, title: 'Utilisateurs' },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], runGuardsAndResolvers: 'always' },
+  { path: 'entrepots', component: EntrepotsComponent, canActivate: [authGuard], runGuardsAndResolvers: 'always' },
+  { path: 'produits', component: ProduitsComponent, canActivate: [authGuard], runGuardsAndResolvers: 'always' },
+  { path: 'stocks', component: StocksComponent, canActivate: [authGuard], runGuardsAndResolvers: 'always' },
+  { path: 'mouvements', component: MouvementsComponent, canActivate: [authGuard], runGuardsAndResolvers: 'always' },
+  { path: 'utilisateurs', component: UtilisateursComponent, canActivate: [adminGuard], title: 'Utilisateurs' },
 ];
