@@ -5,9 +5,11 @@ import { ProduitsComponent } from './components/produits/produits.component';
 import { StocksComponent } from './components/stocks/stocks.component';
 import { MouvementsComponent } from './components/mouvements/mouvements.component';
 import { UtilisateursComponent } from './components/utilisateurs/utilisateurs.component';
+import { LoginComponent } from './components/login/login.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, runGuardsAndResolvers: 'always' },
   { path: 'entrepots', component: EntrepotsComponent, runGuardsAndResolvers: 'always' },
   { path: 'produits', component: ProduitsComponent, runGuardsAndResolvers: 'always' },
