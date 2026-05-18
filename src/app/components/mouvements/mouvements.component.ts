@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MouvementService } from '../../services/stock.service';
@@ -14,11 +14,11 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
     <div class="page-container">
       <div class="page-header">
         <h1>Mouvements</h1>
-        <p>Historique des entrées et sorties de stock</p>
+        <p>Historique des entrees et sorties de stock</p>
       </div>
 
       <div class="toolbar">
-        <input class="search-input" [(ngModel)]="search" placeholder="Rechercher..." />
+        <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Rechercher..." />
         <button class="btn btn-primary" (click)="openModal()">+ Enregistrer Mouvement</button>
       </div>
 
@@ -29,27 +29,27 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
               <th>#</th>
               <th>Type</th>
               <th>Produit</th>
-              <th>Entrepôt</th>
-              <th>Quantité</th>
+              <th>Entrepot</th>
+              <th>Quantite</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="filtered().length === 0">
+            <tr *ngIf="filteredMouvements.length === 0">
               <td colspan="6">
                 <div class="empty-state">
-                  <div class="icon">⇄</div>
-                  <p>Aucun mouvement enregistré</p>
+                  <div class="icon">o</div>
+                  <p>Aucun mouvement enregistre</p>
                 </div>
               </td>
             </tr>
-            <tr *ngFor="let m of filtered()">
+            <tr *ngFor="let m of filteredMouvements">
               <td style="color:#444466; font-size:0.75rem;">#{{ m.id }}</td>
               <td>
                 <span class="badge"
                   [class.badge-entree]="m.type==='entree'"
                   [class.badge-sortie]="m.type==='sortie'">
-                  {{ m.type === 'entree' ? '↑ ENTRÉE' : '↓ SORTIE' }}
+                  {{ m.type === 'entree' ? 'ENTREE' : 'SORTIE' }}
                 </span>
               </td>
               <td><strong>{{ m.nomProduit }}</strong></td>
@@ -71,7 +71,7 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2>Enregistrer un Mouvement</h2>
-          <button class="modal-close" (click)="closeModal()">×</button>
+          <button class="modal-close" (click)="closeModal()">x</button>
         </div>
 
         <div class="form-group">
@@ -82,14 +82,14 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
               [style.borderColor]="form.type==='entree' ? '#43e97b' : '#2a2a3a'"
               [style.color]="form.type==='entree' ? '#43e97b' : '#8888aa'"
               (click)="form.type='entree'">
-              ↑ ENTRÉE
+              ENTREE
             </button>
             <button class="btn" style="justify-content:center; padding:16px;"
               [style.background]="form.type==='sortie' ? 'rgba(255,101,132,0.15)' : 'transparent'"
               [style.borderColor]="form.type==='sortie' ? '#ff6584' : '#2a2a3a'"
               [style.color]="form.type==='sortie' ? '#ff6584' : '#8888aa'"
               (click)="form.type='sortie'">
-              ↓ SORTIE
+              SORTIE
             </button>
           </div>
         </div>
@@ -102,14 +102,14 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
           </select>
         </div>
         <div class="form-group">
-          <label>Entrepôt</label>
+          <label>Entrepot</label>
           <select [(ngModel)]="form.entrepotId">
-            <option value="">-- Choisir un entrepôt --</option>
+            <option value="">-- Choisir un entrepot --</option>
             <option *ngFor="let e of entrepots" [value]="e.id">{{ e.nom }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Quantité</label>
+          <label>Quantite</label>
           <input type="number" [(ngModel)]="form.quantite" placeholder="Ex: 50" />
         </div>
 
@@ -127,6 +127,7 @@ import { MouvementStock, Entrepot, Produit } from '../../models/models';
 })
 export class MouvementsComponent implements OnInit {
   mouvements: MouvementStock[] = [];
+  filteredMouvements: MouvementStock[] = [];
   entrepots: Entrepot[] = [];
   produits: Produit[] = [];
   search = '';
@@ -138,19 +139,26 @@ export class MouvementsComponent implements OnInit {
   constructor(
     private mouvementService: MouvementService,
     private entrepotService: EntrepotService,
-    private produitService: ProduitService
+    private produitService: ProduitService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.load();
-    this.entrepotService.getAll().subscribe(d => this.entrepots = d);
-    this.produitService.getAll().subscribe(d => this.produits = d);
+    this.entrepotService.getAll().subscribe(d => { this.entrepots = d; setTimeout(() => this.cdr.detectChanges(), 0); });
+    this.produitService.getAll().subscribe(d => { this.produits = d; setTimeout(() => this.cdr.detectChanges(), 0); });
   }
 
-  load() { this.mouvementService.getAll().subscribe(d => this.mouvements = d.reverse()); }
+  load() {
+    this.mouvementService.getAll().subscribe(d => {
+      this.mouvements = [...d].reverse();
+      this.filteredMouvements = this.mouvements;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+  }
 
-  filtered() {
-    return this.mouvements.filter(m =>
+  applyFilter() {
+    this.filteredMouvements = this.mouvements.filter(m =>
       (m.nomProduit || '').toLowerCase().includes(this.search.toLowerCase()) ||
       (m.nomEntrepot || '').toLowerCase().includes(this.search.toLowerCase())
     );
@@ -165,8 +173,8 @@ export class MouvementsComponent implements OnInit {
 
   save() {
     this.mouvementService.create(+this.form.produitId, +this.form.entrepotId, this.form.type, +this.form.quantite).subscribe({
-      next: () => { this.load(); this.closeModal(); this.toast('Mouvement enregistré', 'success'); },
-      error: (err) => this.toast(err.error?.message || 'Erreur — vérifiez le stock disponible', 'error')
+      next: () => { this.load(); this.closeModal(); this.toast('Mouvement enregistre', 'success'); },
+      error: (err) => this.toast(err.error?.message || 'Erreur', 'error')
     });
   }
 

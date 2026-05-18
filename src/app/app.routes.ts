@@ -4,12 +4,14 @@ import { EntrepotsComponent } from './components/entrepots/entrepots.component';
 import { ProduitsComponent } from './components/produits/produits.component';
 import { StocksComponent } from './components/stocks/stocks.component';
 import { MouvementsComponent } from './components/mouvements/mouvements.component';
+import { UtilisateursComponent } from './components/utilisateurs/utilisateurs.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'entrepots', component: EntrepotsComponent },
-  { path: 'produits', component: ProduitsComponent },
-  { path: 'stocks', component: StocksComponent },
-  { path: 'mouvements', component: MouvementsComponent },
+  { path: 'dashboard', component: DashboardComponent, runGuardsAndResolvers: 'always' },
+  { path: 'entrepots', component: EntrepotsComponent, runGuardsAndResolvers: 'always' },
+  { path: 'produits', component: ProduitsComponent, runGuardsAndResolvers: 'always' },
+  { path: 'stocks', component: StocksComponent, runGuardsAndResolvers: 'always' },
+  { path: 'mouvements', component: MouvementsComponent, runGuardsAndResolvers: 'always' },
+  { path: 'utilisateurs', component: UtilisateursComponent, title: 'Utilisateurs' },
 ];

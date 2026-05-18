@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, NavigationEnd } from '@angular/router';
 import { EntrepotService } from '../../services/entrepot.service';
 import { Entrepot } from '../../models/models';
 
@@ -12,13 +11,13 @@ import { Entrepot } from '../../models/models';
   template: `
     <div class="page-container">
       <div class="page-header">
-        <h1>Entrepôts</h1>
+        <h1>Entrepots</h1>
         <p>Gestion des sites de stockage</p>
       </div>
 
       <div class="toolbar">
-        <input class="search-input" [(ngModel)]="search" placeholder="Rechercher un entrepôt..." />
-        <button class="btn btn-primary" (click)="openModal()">+ Nouvel Entrepôt</button>
+        <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Rechercher un entrepot..." />
+        <button class="btn btn-primary" (click)="openModal()">+ Nouvel Entrepot</button>
       </div>
 
       <div class="table-wrapper">
@@ -28,30 +27,30 @@ import { Entrepot } from '../../models/models';
               <th>#</th>
               <th>Nom</th>
               <th>Adresse</th>
-              <th>Capacité</th>
+              <th>Capacite</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="filtered().length === 0">
+            <tr *ngIf="filteredEntrepots.length === 0">
               <td colspan="5">
                 <div class="empty-state">
-                  <div class="icon">◫</div>
-                  <p>Aucun entrepôt trouvé</p>
+                  <div class="icon">o</div>
+                  <p>Aucun entrepot trouve</p>
                 </div>
               </td>
             </tr>
-            <tr *ngFor="let e of filtered()">
+            <tr *ngFor="let e of filteredEntrepots">
               <td style="color:#444466; font-size:0.75rem;">#{{ e.id }}</td>
               <td><strong>{{ e.nom }}</strong></td>
               <td style="color:#8888aa;">{{ e.adresse }}</td>
               <td>
-                <span class="badge badge-ok">{{ e.capacite | number }} unités</span>
+                <span class="badge badge-ok">{{ e.capacite | number }} unites</span>
               </td>
               <td>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn btn-ghost btn-sm" (click)="openModal(e)">✎ Modifier</button>
-                  <button class="btn btn-danger btn-sm" (click)="delete(e.id!)">✕ Supprimer</button>
+                  <button class="btn btn-ghost btn-sm" (click)="openModal(e)">Modifier</button>
+                  <button class="btn btn-danger btn-sm" (click)="delete(e.id!)">Supprimer</button>
                 </div>
               </td>
             </tr>
@@ -63,24 +62,24 @@ import { Entrepot } from '../../models/models';
     <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>{{ editing ? 'Modifier' : 'Nouvel' }} Entrepôt</h2>
-          <button class="modal-close" (click)="closeModal()">×</button>
+          <h2>{{ editing ? 'Modifier' : 'Nouvel' }} Entrepot</h2>
+          <button class="modal-close" (click)="closeModal()">x</button>
         </div>
         <div class="form-group">
           <label>Nom</label>
-          <input [(ngModel)]="form.nom" placeholder="Ex: Entrepôt Nord" />
+          <input [(ngModel)]="form.nom" placeholder="Ex: Entrepot Nord" />
         </div>
         <div class="form-group">
           <label>Adresse</label>
           <input [(ngModel)]="form.adresse" placeholder="Ex: Tunis, Rue de la Paix" />
         </div>
         <div class="form-group">
-          <label>Capacité</label>
+          <label>Capacite</label>
           <input type="number" [(ngModel)]="form.capacite" placeholder="Ex: 1000" />
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Créer' }}</button>
+          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Creer' }}</button>
         </div>
       </div>
     </div>
@@ -92,6 +91,7 @@ import { Entrepot } from '../../models/models';
 })
 export class EntrepotsComponent implements OnInit {
   entrepots: Entrepot[] = [];
+  filteredEntrepots: Entrepot[] = [];
   search = '';
   showModal = false;
   editing = false;
@@ -100,21 +100,22 @@ export class EntrepotsComponent implements OnInit {
   toastType = 'success';
   form: Entrepot = { nom: '', adresse: '', capacite: 0 };
 
-  constructor(private service: EntrepotService, private router: Router) {}
+  constructor(private service: EntrepotService, private cdr: ChangeDetectorRef) {}
 
-  ngOnInit() {
-    this.load();
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd && event.url === '/entrepots') {
-        this.load();
-      }
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.service.getAll().subscribe(d => {
+      this.entrepots = d;
+      this.filteredEntrepots = d;
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
     });
   }
 
-  load() { this.service.getAll().subscribe(d => this.entrepots = d); }
-
-  filtered() {
-    return this.entrepots.filter(e =>
+  applyFilter() {
+    this.filteredEntrepots = this.entrepots.filter(e =>
       e.nom.toLowerCase().includes(this.search.toLowerCase()) ||
       e.adresse.toLowerCase().includes(this.search.toLowerCase())
     );
@@ -138,22 +139,22 @@ export class EntrepotsComponent implements OnInit {
   save() {
     if (this.editing && this.editId) {
       this.service.update(this.editId, this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Entrepôt modifié', 'success'); },
-        error: () => this.toast('Erreur lors de la modification', 'error')
+        next: () => { this.load(); this.closeModal(); this.toast('Entrepot modifie', 'success'); },
+        error: () => this.toast('Erreur', 'error')
       });
     } else {
       this.service.create(this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Entrepôt créé', 'success'); },
-        error: () => this.toast('Erreur lors de la création', 'error')
+        next: () => { this.load(); this.closeModal(); this.toast('Entrepot cree', 'success'); },
+        error: () => this.toast('Erreur', 'error')
       });
     }
   }
 
   delete(id: number) {
-    if (confirm('Supprimer cet entrepôt ?')) {
+    if (confirm('Supprimer cet entrepot ?')) {
       this.service.delete(id).subscribe({
-        next: () => { this.load(); this.toast('Entrepôt supprimé', 'success'); },
-        error: () => this.toast('Erreur lors de la suppression', 'error')
+        next: () => { this.load(); this.toast('Entrepot supprime', 'success'); },
+        error: () => this.toast('Erreur', 'error')
       });
     }
   }

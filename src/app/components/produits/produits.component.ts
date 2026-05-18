@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProduitService } from '../../services/produit.service';
@@ -16,7 +16,7 @@ import { Produit } from '../../models/models';
       </div>
 
       <div class="toolbar">
-        <input class="search-input" [(ngModel)]="search" placeholder="Rechercher un produit..." />
+        <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Rechercher un produit..." />
         <button class="btn btn-primary" (click)="openModal()">+ Nouveau Produit</button>
       </div>
 
@@ -26,7 +26,7 @@ import { Produit } from '../../models/models';
             <tr>
               <th>#</th>
               <th>Nom</th>
-              <th>Catégorie</th>
+              <th>Categorie</th>
               <th>Prix</th>
               <th>Fournisseur</th>
               <th>Seuil Min</th>
@@ -34,15 +34,15 @@ import { Produit } from '../../models/models';
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="filtered().length === 0">
+            <tr *ngIf="filteredProduits.length === 0">
               <td colspan="7">
                 <div class="empty-state">
-                  <div class="icon">◈</div>
-                  <p>Aucun produit trouvé</p>
+                  <div class="icon">o</div>
+                  <p>Aucun produit trouve</p>
                 </div>
               </td>
             </tr>
-            <tr *ngFor="let p of filtered()">
+            <tr *ngFor="let p of filteredProduits">
               <td style="color:#444466; font-size:0.75rem;">#{{ p.id }}</td>
               <td><strong>{{ p.nom }}</strong></td>
               <td>
@@ -55,8 +55,8 @@ import { Produit } from '../../models/models';
               <td>{{ p.seuilMin }}</td>
               <td>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn btn-ghost btn-sm" (click)="openModal(p)">✎ Modifier</button>
-                  <button class="btn btn-danger btn-sm" (click)="delete(p.id!)">✕ Supprimer</button>
+                  <button class="btn btn-ghost btn-sm" (click)="openModal(p)">Modifier</button>
+                  <button class="btn btn-danger btn-sm" (click)="delete(p.id!)">Supprimer</button>
                 </div>
               </td>
             </tr>
@@ -69,7 +69,7 @@ import { Produit } from '../../models/models';
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2>{{ editing ? 'Modifier' : 'Nouveau' }} Produit</h2>
-          <button class="modal-close" (click)="closeModal()">×</button>
+          <button class="modal-close" (click)="closeModal()">x</button>
         </div>
         <div class="grid-2">
           <div class="form-group">
@@ -77,7 +77,7 @@ import { Produit } from '../../models/models';
             <input [(ngModel)]="form.nom" placeholder="Ex: Laptop Dell" />
           </div>
           <div class="form-group">
-            <label>Catégorie</label>
+            <label>Categorie</label>
             <input [(ngModel)]="form.categorie" placeholder="Ex: Electronique" />
           </div>
           <div class="form-group">
@@ -95,7 +95,7 @@ import { Produit } from '../../models/models';
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Créer' }}</button>
+          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Creer' }}</button>
         </div>
       </div>
     </div>
@@ -107,6 +107,7 @@ import { Produit } from '../../models/models';
 })
 export class ProduitsComponent implements OnInit {
   produits: Produit[] = [];
+  filteredProduits: Produit[] = [];
   search = '';
   showModal = false;
   editing = false;
@@ -115,14 +116,20 @@ export class ProduitsComponent implements OnInit {
   toastType = 'success';
   form: Produit = { nom: '', categorie: '', prix: 0, fournisseur: '', seuilMin: 0 };
 
-  constructor(private service: ProduitService) {}
+  constructor(private service: ProduitService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.load(); }
 
-  load() { this.service.getAll().subscribe(d => this.produits = d); }
+  load() {
+    this.service.getAll().subscribe(d => {
+      this.produits = d;
+      this.filteredProduits = d;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+  }
 
-  filtered() {
-    return this.produits.filter(p =>
+  applyFilter() {
+    this.filteredProduits = this.produits.filter(p =>
       p.nom.toLowerCase().includes(this.search.toLowerCase()) ||
       p.categorie.toLowerCase().includes(this.search.toLowerCase()) ||
       p.fournisseur.toLowerCase().includes(this.search.toLowerCase())
@@ -147,12 +154,12 @@ export class ProduitsComponent implements OnInit {
   save() {
     if (this.editing && this.editId) {
       this.service.update(this.editId, this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Produit modifié', 'success'); },
+        next: () => { this.load(); this.closeModal(); this.toast('Produit modifie', 'success'); },
         error: () => this.toast('Erreur', 'error')
       });
     } else {
       this.service.create(this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Produit créé', 'success'); },
+        next: () => { this.load(); this.closeModal(); this.toast('Produit cree', 'success'); },
         error: () => this.toast('Erreur', 'error')
       });
     }
@@ -161,7 +168,7 @@ export class ProduitsComponent implements OnInit {
   delete(id: number) {
     if (confirm('Supprimer ce produit ?')) {
       this.service.delete(id).subscribe({
-        next: () => { this.load(); this.toast('Produit supprimé', 'success'); },
+        next: () => { this.load(); this.toast('Produit supprime', 'success'); },
         error: () => this.toast('Erreur', 'error')
       });
     }

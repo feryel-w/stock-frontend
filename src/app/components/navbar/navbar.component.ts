@@ -17,7 +17,7 @@ import { CommonModule } from '@angular/common';
           <span>⬡</span> Dashboard
         </a>
         <a routerLink="/entrepots" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          <span>◫</span> Entrepôts
+          <span>◫</span> Entrepots
         </a>
         <a routerLink="/produits" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <span>◈</span> Produits
@@ -27,6 +27,9 @@ import { CommonModule } from '@angular/common';
         </a>
         <a routerLink="/mouvements" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
           <span>⇄</span> Mouvements
+        </a>
+        <a routerLink="/utilisateurs" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          <span>U</span> Utilisateurs
         </a>
       </div>
       <div class="nav-status">

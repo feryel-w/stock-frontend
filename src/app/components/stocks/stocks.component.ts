@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../services/stock.service';
@@ -14,19 +14,19 @@ import { Stock, Entrepot, Produit } from '../../models/models';
     <div class="page-container">
       <div class="page-header">
         <h1>Stocks</h1>
-        <p>État des stocks par entrepôt et produit</p>
+        <p>Etat des stocks par entrepot et produit</p>
       </div>
 
       <div *ngIf="alertes.length > 0" class="alert-banner">
-        <span style="font-size:1.2rem">⚠</span>
-        <strong>{{ alertes.length }} stock(s) en alerte !</strong> Quantité inférieure ou égale au seuil.
+        <span style="font-size:1.2rem">!</span>
+        <strong>{{ alertes.length }} stock(s) en alerte !</strong> Quantite inferieure ou egale au seuil.
       </div>
 
       <div class="toolbar">
-        <input class="search-input" [(ngModel)]="search" placeholder="Rechercher par produit ou entrepôt..." />
+        <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Rechercher par produit ou entrepot..." />
         <div style="display:flex; gap:8px;">
           <button class="btn" [class.btn-primary]="showAlertes" [class.btn-ghost]="!showAlertes" (click)="toggleAlertes()">
-            ⚠ Alertes ({{ alertes.length }})
+            Alertes ({{ alertes.length }})
           </button>
           <button class="btn btn-primary" (click)="openModal()">+ Nouveau Stock</button>
         </div>
@@ -38,23 +38,23 @@ import { Stock, Entrepot, Produit } from '../../models/models';
             <tr>
               <th>#</th>
               <th>Produit</th>
-              <th>Entrepôt</th>
-              <th>Quantité</th>
+              <th>Entrepot</th>
+              <th>Quantite</th>
               <th>Seuil Alerte</th>
               <th>Statut</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="filtered().length === 0">
+            <tr *ngIf="filteredStocks.length === 0">
               <td colspan="7">
                 <div class="empty-state">
-                  <div class="icon">◉</div>
-                  <p>Aucun stock trouvé</p>
+                  <div class="icon">o</div>
+                  <p>Aucun stock trouve</p>
                 </div>
               </td>
             </tr>
-            <tr *ngFor="let s of filtered()">
+            <tr *ngFor="let s of filteredStocks">
               <td style="color:#444466; font-size:0.75rem;">#{{ s.id }}</td>
               <td><strong>{{ s.nomProduit }}</strong></td>
               <td style="color:#8888aa;">{{ s.nomEntrepot }}</td>
@@ -69,13 +69,13 @@ import { Stock, Entrepot, Produit } from '../../models/models';
                 <span class="badge"
                   [class.badge-alert]="s.quantite <= s.seuilAlerte"
                   [class.badge-ok]="s.quantite > s.seuilAlerte">
-                  {{ s.quantite <= s.seuilAlerte ? '⚠ ALERTE' : '✓ OK' }}
+                  {{ s.quantite <= s.seuilAlerte ? 'ALERTE' : 'OK' }}
                 </span>
               </td>
               <td>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn btn-ghost btn-sm" (click)="openModal(s)">✎</button>
-                  <button class="btn btn-danger btn-sm" (click)="delete(s.id!)">✕</button>
+                  <button class="btn btn-ghost btn-sm" (click)="openModal(s)">Modifier</button>
+                  <button class="btn btn-danger btn-sm" (click)="delete(s.id!)">Supprimer</button>
                 </div>
               </td>
             </tr>
@@ -88,7 +88,7 @@ import { Stock, Entrepot, Produit } from '../../models/models';
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2>{{ editing ? 'Modifier Stock' : 'Nouveau Stock' }}</h2>
-          <button class="modal-close" (click)="closeModal()">×</button>
+          <button class="modal-close" (click)="closeModal()">x</button>
         </div>
         <div *ngIf="!editing">
           <div class="form-group">
@@ -99,16 +99,16 @@ import { Stock, Entrepot, Produit } from '../../models/models';
             </select>
           </div>
           <div class="form-group">
-            <label>Entrepôt</label>
+            <label>Entrepot</label>
             <select [(ngModel)]="selectedEntrepotId">
-              <option value="">-- Choisir un entrepôt --</option>
+              <option value="">-- Choisir un entrepot --</option>
               <option *ngFor="let e of entrepots" [value]="e.id">{{ e.nom }}</option>
             </select>
           </div>
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>Quantité</label>
+            <label>Quantite</label>
             <input type="number" [(ngModel)]="form.quantite" placeholder="0" />
           </div>
           <div class="form-group">
@@ -118,7 +118,7 @@ import { Stock, Entrepot, Produit } from '../../models/models';
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Créer' }}</button>
+          <button class="btn btn-primary" (click)="save()">{{ editing ? 'Modifier' : 'Creer' }}</button>
         </div>
       </div>
     </div>
@@ -130,6 +130,7 @@ import { Stock, Entrepot, Produit } from '../../models/models';
 })
 export class StocksComponent implements OnInit {
   stocks: Stock[] = [];
+  filteredStocks: Stock[] = [];
   alertes: Stock[] = [];
   entrepots: Entrepot[] = [];
   produits: Produit[] = [];
@@ -147,21 +148,28 @@ export class StocksComponent implements OnInit {
   constructor(
     private stockService: StockService,
     private entrepotService: EntrepotService,
-    private produitService: ProduitService
+    private produitService: ProduitService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.load();
-    this.entrepotService.getAll().subscribe(d => this.entrepots = d);
-    this.produitService.getAll().subscribe(d => this.produits = d);
-    this.stockService.getAlertes().subscribe(d => this.alertes = d);
+    this.entrepotService.getAll().subscribe(d => { this.entrepots = d; setTimeout(() => this.cdr.detectChanges(), 0); });
+    this.produitService.getAll().subscribe(d => { this.produits = d; setTimeout(() => this.cdr.detectChanges(), 0); });
+    this.stockService.getAlertes().subscribe(d => { this.alertes = d; setTimeout(() => this.cdr.detectChanges(), 0); });
   }
 
-  load() { this.stockService.getAll().subscribe(d => this.stocks = d); }
+  load() {
+    this.stockService.getAll().subscribe(d => {
+      this.stocks = d;
+      this.filteredStocks = d;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+  }
 
-  filtered() {
+  applyFilter() {
     let list = this.showAlertes ? this.alertes : this.stocks;
-    return list.filter(s =>
+    this.filteredStocks = list.filter(s =>
       (s.nomProduit || '').toLowerCase().includes(this.search.toLowerCase()) ||
       (s.nomEntrepot || '').toLowerCase().includes(this.search.toLowerCase())
     );
@@ -169,7 +177,16 @@ export class StocksComponent implements OnInit {
 
   toggleAlertes() {
     this.showAlertes = !this.showAlertes;
-    if (this.showAlertes) this.stockService.getAlertes().subscribe(d => this.alertes = d);
+    if (this.showAlertes) {
+      this.stockService.getAlertes().subscribe(d => {
+        this.alertes = d;
+        this.filteredStocks = d;
+        setTimeout(() => this.cdr.detectChanges(), 0);
+      });
+    } else {
+      this.filteredStocks = this.stocks;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    }
   }
 
   openModal(s?: Stock) {
@@ -192,13 +209,13 @@ export class StocksComponent implements OnInit {
   save() {
     if (this.editing && this.editId) {
       this.stockService.update(this.editId, this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Stock modifié', 'success'); },
+        next: () => { this.load(); this.closeModal(); this.toast('Stock modifie', 'success'); },
         error: () => this.toast('Erreur', 'error')
       });
     } else {
       this.stockService.create(+this.selectedProduitId, +this.selectedEntrepotId, this.form).subscribe({
-        next: () => { this.load(); this.closeModal(); this.toast('Stock créé', 'success'); },
-        error: () => this.toast('Erreur — vérifiez produit et entrepôt', 'error')
+        next: () => { this.load(); this.closeModal(); this.toast('Stock cree', 'success'); },
+        error: () => this.toast('Erreur', 'error')
       });
     }
   }
@@ -206,7 +223,7 @@ export class StocksComponent implements OnInit {
   delete(id: number) {
     if (confirm('Supprimer ce stock ?')) {
       this.stockService.delete(id).subscribe({
-        next: () => { this.load(); this.toast('Stock supprimé', 'success'); },
+        next: () => { this.load(); this.toast('Stock supprime', 'success'); },
         error: () => this.toast('Erreur', 'error')
       });
     }

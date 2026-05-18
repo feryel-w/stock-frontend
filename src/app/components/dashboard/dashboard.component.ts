@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EntrepotService } from '../../services/entrepot.service';
@@ -13,48 +13,48 @@ import { StockService, MouvementService } from '../../services/stock.service';
     <div class="page-container">
       <div class="page-header">
         <h1>Tableau de Bord</h1>
-        <p>Vue d'ensemble du système de gestion des stocks</p>
+        <p>Vue d'ensemble du systeme de gestion des stocks</p>
       </div>
 
       <div class="grid-4" style="margin-bottom: 32px;">
         <div class="stat-card purple">
-          <div class="stat-icon">◫</div>
+          <div class="stat-icon">E</div>
           <div class="stat-number">{{ entrepots }}</div>
-          <div class="stat-label">Entrepôts</div>
+          <div class="stat-label">Entrepots</div>
         </div>
         <div class="stat-card pink">
-          <div class="stat-icon">◈</div>
+          <div class="stat-icon">P</div>
           <div class="stat-number">{{ produits }}</div>
           <div class="stat-label">Produits</div>
         </div>
         <div class="stat-card green">
-          <div class="stat-icon">◉</div>
+          <div class="stat-icon">S</div>
           <div class="stat-number">{{ stocks }}</div>
           <div class="stat-label">Stocks</div>
         </div>
         <div class="stat-card orange">
-          <div class="stat-icon">⇄</div>
+          <div class="stat-icon">M</div>
           <div class="stat-number">{{ mouvements }}</div>
           <div class="stat-label">Mouvements</div>
         </div>
       </div>
 
       <div *ngIf="alertes.length > 0" class="alert-banner">
-        <span style="font-size:1.2rem">⚠</span>
-        <strong>{{ alertes.length }} stock(s) en alerte</strong> — Quantité inférieure au seuil d'alerte
+        <span style="font-size:1.2rem">!</span>
+        <strong>{{ alertes.length }} stock(s) en alerte</strong> — Quantite inferieure au seuil d'alerte
         <a routerLink="/stocks" style="margin-left:auto; color:inherit; text-decoration:underline; font-size:0.8rem;">
-          Voir les stocks →
+          Voir les stocks
         </a>
       </div>
 
       <div class="grid-2">
         <div class="card">
           <h3 style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:20px; color:#8888aa; text-transform:uppercase; letter-spacing:1.5px;">
-            ⚠ Stocks en Alerte
+            Stocks en Alerte
           </h3>
           <div *ngIf="alertes.length === 0" class="empty-state">
-            <div class="icon">✓</div>
-            <p>Tous les stocks sont à niveau</p>
+            <div class="icon">ok</div>
+            <p>Tous les stocks sont a niveau</p>
           </div>
           <div *ngFor="let s of alertes" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #2a2a3a;">
             <div>
@@ -67,11 +67,11 @@ import { StockService, MouvementService } from '../../services/stock.service';
 
         <div class="card">
           <h3 style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:20px; color:#8888aa; text-transform:uppercase; letter-spacing:1.5px;">
-            ⇄ Derniers Mouvements
+            Derniers Mouvements
           </h3>
           <div *ngIf="derniersMouvements.length === 0" class="empty-state">
-            <div class="icon">⇄</div>
-            <p>Aucun mouvement enregistré</p>
+            <div class="icon">m</div>
+            <p>Aucun mouvement enregistre</p>
           </div>
           <div *ngFor="let m of derniersMouvements" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #2a2a3a;">
             <div>
@@ -87,28 +87,28 @@ import { StockService, MouvementService } from '../../services/stock.service';
 
       <div style="margin-top:32px;">
         <h3 style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:20px; color:#8888aa; text-transform:uppercase; letter-spacing:1.5px;">
-          ◈ Accès Rapide
+          Acces Rapide
         </h3>
         <div class="grid-4">
           <a routerLink="/entrepots" class="quick-link">
-            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">◫</span>
-            <strong>Gérer Entrepôts</strong>
+            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">E</span>
+            <strong>Gerer Entrepots</strong>
             <p>Ajouter, modifier, supprimer</p>
           </a>
           <a routerLink="/produits" class="quick-link">
-            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">◈</span>
-            <strong>Gérer Produits</strong>
+            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">P</span>
+            <strong>Gerer Produits</strong>
             <p>Catalogue complet</p>
           </a>
           <a routerLink="/stocks" class="quick-link">
-            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">◉</span>
-            <strong>Gérer Stocks</strong>
-            <p>Par entrepôt et produit</p>
+            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">S</span>
+            <strong>Gerer Stocks</strong>
+            <p>Par entrepot et produit</p>
           </a>
           <a routerLink="/mouvements" class="quick-link">
-            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">⇄</span>
+            <span style="font-size:1.8rem; margin-bottom:10px; display:block;">M</span>
             <strong>Enregistrer Mouvement</strong>
-            <p>Entrée / Sortie</p>
+            <p>Entree / Sortie</p>
           </a>
         </div>
       </div>
@@ -152,17 +152,31 @@ export class DashboardComponent implements OnInit {
     private entrepotService: EntrepotService,
     private produitService: ProduitService,
     private stockService: StockService,
-    private mouvementService: MouvementService
+    private mouvementService: MouvementService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.entrepotService.getAll().subscribe(d => this.entrepots = d.length);
-    this.produitService.getAll().subscribe(d => this.produits = d.length);
-    this.stockService.getAll().subscribe(d => this.stocks = d.length);
-    this.stockService.getAlertes().subscribe(d => this.alertes = d);
+    this.entrepotService.getAll().subscribe(d => {
+      this.entrepots = d.length;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+    this.produitService.getAll().subscribe(d => {
+      this.produits = d.length;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+    this.stockService.getAll().subscribe(d => {
+      this.stocks = d.length;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
+    this.stockService.getAlertes().subscribe(d => {
+      this.alertes = d;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    });
     this.mouvementService.getAll().subscribe(d => {
       this.mouvements = d.length;
-      this.derniersMouvements = d.slice(-5).reverse();
+      this.derniersMouvements = [...d].slice(-5).reverse();
+      setTimeout(() => this.cdr.detectChanges(), 0);
     });
   }
 }

@@ -1,3 +1,11 @@
+export interface Stock {
+  id?: number;
+  quantite: number;
+  seuilAlerte: number;
+  nomProduit?: string;
+  nomEntrepot?: string;
+}
+
 export interface Entrepot {
   id?: number;
   nom: string;
@@ -13,14 +21,6 @@ export interface Produit {
   prix: number;
   fournisseur: string;
   seuilMin: number;
-}
-
-export interface Stock {
-  id?: number;
-  quantite: number;
-  seuilAlerte: number;
-  nomProduit?: string;
-  nomEntrepot?: string;
 }
 
 export interface MouvementStock {
