@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-utilisateurs',
@@ -79,7 +80,7 @@ import { HttpClient } from '@angular/common/http';
         </div>
         <div *ngIf="!editing" class="form-group">
           <label>Mot de Passe</label>
-          <input type="password" [(ngModel)]="form.motDePasse" placeholder="Min 4 caracteres" />
+          <input type="password" [(ngModel)]="form.motDePasse" placeholder="Min 8 car, maj, min, chiffre, special" />
         </div>
         <div class="form-group">
           <label>Role</label>
@@ -159,7 +160,13 @@ export class UtilisateursComponent implements OnInit {
     } else {
       this.http.post(`${this.url}/inscrire`, this.form).subscribe({
         next: () => { this.load(); this.closeModal(); this.toast('Utilisateur cree', 'success'); },
-        error: (err) => this.toast(err.error?.message || 'Erreur', 'error')
+        error: (err) => {
+          if (err.status === 400) {
+            this.toast(err.error?.message || 'Donnees invalides', 'error');
+          } else {
+            this.toast('Erreur serveur', 'error');
+          }
+        }
       });
     }
   }
